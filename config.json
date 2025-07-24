@@ -1,0 +1,6 @@
+{
+	"must_delay_between_requests": true,
+	"_delay_between_requests":"in milliseconds must be more than 1000",
+	"delay_between_requests":1000,
+	"location":"../data/"
+}

@@ -1,0 +1,15 @@
+{
+	"launch_vertion":2,
+	"launch_url":"https://bng.games/play/3_aztec_temples/?lang=en",
+	"device":"desktop",
+	"bets":[1,2,3,4,5,8,10,15,25,35,50,75,100,150,200,250,300,350,400,450,500],
+	"bet_per_line":1,
+	"lines":[25],
+	"line":25,
+	"bet_factors":[20],
+	"bet_factor":20,
+	"selected_modes":[1,2],
+	"selected_mode": 1,
+	"can_buy_bonus":true,
+	"buy_bonus_only": false
+}

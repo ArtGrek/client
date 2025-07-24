@@ -1,0 +1,15 @@
+{
+	"launch_vertion":2,
+	"launch_url":"https://bng.games/play/coin_lamp/?lang=en",
+	"device":"desktop",
+	"bets":[1,2,3,4,5,6,7,8,10,15,20,25,30,40,50,75,100,150,200,250,300],
+	"bet_per_line":1,
+	"lines":[1],
+	"line":1,
+	"bet_factors":[20],
+	"bet_factor":20,
+	"selected_modes":[1,2,3],
+	"selected_mode": 1,
+	"can_buy_bonus":true,
+	"buy_bonus_only": false
+}

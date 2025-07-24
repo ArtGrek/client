@@ -1,0 +1,15 @@
+{
+	"launch_vertion":2,
+	"launch_url":"https://bng.games/play/china_festival/?lang=en",
+	"device":"desktop",
+	"bets":[1,2,3,4,5,6,7,9,10,15,16,20,25,30,35,50,55,75,80,100,125,150],
+	"bet_per_line":1,
+	"lines":[25],
+	"line":25,
+	"bet_factors":[20],
+	"bet_factor":20,
+	"selected_modes":[1,2],
+	"selected_mode": 1,
+	"can_buy_bonus":true,
+	"buy_bonus_only": false
+}
