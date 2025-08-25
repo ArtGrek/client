@@ -3,7 +3,9 @@ use std::io::{self, Write};
 use std::fs;
 use tokio;
 use tokio::time::{sleep, Duration};
-use rand::Rng;
+use rand;
+use rustyline::error::ReadlineError;
+use rustyline::DefaultEditor;
 mod bng;
 mod enj;
 mod hacksaw;
@@ -13,7 +15,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     print!("\x1B[2J\x1B[1;1H"); io::stdout().flush().unwrap();
     let supported_games: Vec<String> = serde_json::from_str(&(fs::read_to_string("./configs/supported_games.json".to_string()).unwrap_or_default())).unwrap_or_default();
     let supported_providers: Vec<String> = serde_json::from_str(&(fs::read_to_string("./configs/supported_providers.json".to_string()).unwrap_or_default())).unwrap_or_default();
+    let mut rl = DefaultEditor::new()?;
     let game_provider = loop {
+        match rl.readline("Input game provider (required): ") {
+            Ok(line) => {
+                let trimmed = line.trim().to_string();
+                if !trimmed.is_empty() && supported_providers.contains(&trimmed) {
+                    rl.add_history_entry(line).ok();
+                    break trimmed;
+                }
+            }
+            Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => { return Ok(()); }
+            Err(err) => { eprintln!("Error: {:?}", err); return Ok(()); }
+        }
+    };
+
+    let game_name = loop {
+        match rl.readline("Input game name (required): ") {
+            Ok(line) => {
+                let trimmed = line.trim().to_string();
+                if !trimmed.is_empty() && supported_games.contains(&trimmed) {
+                    rl.add_history_entry(line).ok();
+                    break trimmed;
+                }
+            }
+            Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => { return Ok(()); }
+            Err(err) => { eprintln!("Error: {:?}", err); return Ok(()); }
+        }
+    };
+    /*let game_provider = loop {
         print!("Input game provider (required): "); let _ = io::Write::flush(&mut io::stdout()); let mut game_provider_input = String::new(); let _ = io::stdin().read_line(&mut game_provider_input);
         let trimmed = game_provider_input.trim().to_string();
         if !trimmed.is_empty() && supported_providers.contains(&trimmed) {break trimmed;}
@@ -22,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         print!("Input game name (required): "); let _ = io::Write::flush(&mut io::stdout()); let mut game_name_input = String::new(); let _ = io::stdin().read_line(&mut game_name_input);
         let trimmed = game_name_input.trim().to_string();
         if !trimmed.is_empty() && supported_games.contains(&trimmed) {break trimmed;}
-    };
+    };*/
     loop {
         // config
         let config: Value = serde_json::from_str(&(fs::read_to_string("./configs/config.json").unwrap_or_default())).unwrap_or_default();
@@ -36,7 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "hacksaw" => {hacksaw::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
             _ => {eprintln!("\r\tProvider not implement"); Ok(())}
         };
-        let delay: u64 = rand::thread_rng().gen_range(10..=30);
+        let delay: u64 = rand::random_range(10..=30);
         print!("\x1B[K\t\n");
         for sec in (0..delay).rev() {
             print!("\x1B[1A\x1B[2K");

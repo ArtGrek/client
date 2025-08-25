@@ -15,7 +15,7 @@ use url::Url;
 use chrono::Utc;
 use std::time::Duration;
 use tokio::time::sleep;
-use rand::Rng;
+use rand;
 use std::net::TcpListener;
 
 #[derive(Debug, Clone)]
@@ -131,7 +131,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
 
     let mut l_port = 0;
     for _ in 0..10 {
-        let try_port = 3001 + rand::thread_rng().gen_range(0..1000);
+        let try_port = 3001 + rand::random_range(0..1000);
         if let Ok(_listener) = TcpListener::bind(("127.0.0.1", try_port)) {
             l_port = try_port;
             break;

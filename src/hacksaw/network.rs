@@ -42,9 +42,9 @@ pub async fn send_exec(cmd_type: &str, a_game: &mut Game) {
     let mut attempts = 0;
     while attempts < max_retries {
         let start_time = Instant::now();
-        match connect_async(a_game.ws_client.clone()).await {
+        match connect_async(a_game.ws_client.as_str()).await {
             Ok((mut ws_stream, _)) => {
-                let send_res = ws_stream.send(tokio_tungstenite::tungstenite::Message::Text(msg.to_string())).await;
+                let send_res = ws_stream.send(tokio_tungstenite::tungstenite::Message::Text(msg.to_string().into())).await;
                 if let Err(err) = send_res {
                     print!("\x1B[1A\x1B[2K");
                     print!("\x1B[1A\x1B[2K");

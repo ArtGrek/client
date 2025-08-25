@@ -2,7 +2,7 @@
 use serde_json::{json, Value};
 use serde::{Deserialize, Serialize};
 use std::{io::{self, Write}, /*process::exit*/};
-use rand::Rng;
+use rand;
 use tokio::time::{sleep, Duration};
 use uuid::Uuid;
 
@@ -195,7 +195,7 @@ pub async fn execute(a_game: &mut Game, must_delay: bool, delay: i64) {
             let _ = io::stdout().flush();
             print!("\x1B[K\tBalance: {:.2}\n", (l_balance as f64) / 100.0);
             print!("\x1B[K\tRequests count: {}\n", l_request_count);
-            if must_delay {sleep(Duration::from_millis(rand::thread_rng().gen_range(500..=delay as u64))).await;}
+            if must_delay {sleep(Duration::from_millis(rand::random_range(500..=delay as u64))).await;}
             if a_game.request.params.get("gsc") == Some(&"sync".to_string()) {*a_game = l_game.clone()}
         }
 }
@@ -282,7 +282,7 @@ fn set_bonus_spins_stop(a_game: &mut Game) {
 }
 
 fn next_body_exec(a_game: &mut Game, a_restart: &mut Restart) {
-    if rand::thread_rng().gen_range(0..1_000) == 0 {
+    if rand::random_range(0..1_000) == 0 {
         set_start(a_game);
     } else if let Some(context) = a_game.response.get("context") {
         if let Some(actions) = context.get("actions") {
@@ -293,7 +293,7 @@ fn next_body_exec(a_game: &mut Game, a_restart: &mut Restart) {
                     a_restart.win = false; set_start(a_game);
                 } else if a_game.params.can_buy_bonus && a_game.params.buy_bonus_only {
                     set_buy_spin(a_game);
-                } else if rand::thread_rng().gen_range(0..100) == 0 {
+                } else if rand::random_range(0..100) == 0 {
                     set_sync(a_game);
                 } else {set_spin(a_game);}
             } else if actions.as_array().unwrap_or(&Vec::new()).contains(&Value::String("bonus_init".to_string())) {
