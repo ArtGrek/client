@@ -1,6 +1,7 @@
 {
 	"launch_vertion":1,
-	"launch_url":"https://static-live.hacksawgaming.com/1807/1.15.2/index.html?language=en&channel=desktop&gameid=1807&mode=2&token=demo&partner=demo&env=https://rgs-demo.hacksawgaming.com/api&realmoneyenv=https://rgs-demo.hacksawgaming.com/api&alwaysredirect=true",
+	"_launch_url":"https://static-live.hacksawgaming.com/1807/1.15.2/index.html?language=en&channel=desktop&gameid=1807&mode=2&token=demo&partner=demo&env=https://rgs-demo.hacksawgaming.com/api&realmoneyenv=https://rgs-demo.hacksawgaming.com/api&alwaysredirect=true",
+	"launch_url":"https://backseatgaming.com/gladius-death-or-glory/",
 	"device":"desktop",
 	"bets":[1, 2, 3, 4, 5, 8, 10, 15, 20, 30, 40, 50, 75, 100, 200, 300, 500, 750, 1000],
 	"bet_per_line":20,

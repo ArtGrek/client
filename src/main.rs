@@ -47,16 +47,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Err(err) => { eprintln!("Error: {:?}", err); return Ok(()); }
         }
     };
-    /*let game_provider = loop {
-        print!("Input game provider (required): "); let _ = io::Write::flush(&mut io::stdout()); let mut game_provider_input = String::new(); let _ = io::stdin().read_line(&mut game_provider_input);
-        let trimmed = game_provider_input.trim().to_string();
-        if !trimmed.is_empty() && supported_providers.contains(&trimmed) {break trimmed;}
-    };
-    let game_name = loop {
-        print!("Input game name (required): "); let _ = io::Write::flush(&mut io::stdout()); let mut game_name_input = String::new(); let _ = io::stdin().read_line(&mut game_name_input);
-        let trimmed = game_name_input.trim().to_string();
-        if !trimmed.is_empty() && supported_games.contains(&trimmed) {break trimmed;}
-    };*/
     loop {
         // config
         let config: Value = serde_json::from_str(&(fs::read_to_string("./configs/config.json").unwrap_or_default())).unwrap_or_default();
