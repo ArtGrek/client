@@ -110,7 +110,7 @@ pub struct Params {
 
 pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, delay: i64) -> Result<(), Box<dyn Error>> {
     //game config
-    let game_config: Value = serde_json::from_str(&(fs::read_to_string("./".to_owned() + &a_game_name + ".json").unwrap_or_default())).unwrap_or_default();
+    let game_config: Value = serde_json::from_str(&(fs::read_to_string("./configs/".to_owned() + &a_game_name + ".json").unwrap_or_default())).unwrap_or_default();
     let _launch_vertion = game_config.get("launch_vertion").and_then(|v| {v.as_i64()}).unwrap_or(1);
     let l_launch_url = game_config.get("launch_url").and_then(|v| v.as_str()).unwrap_or("https://demo.enjoygaming.com/start-game/{QUEUE}").to_string().replace("{QUEUE}", &a_game_name);
     let _l_device = game_config.get("device").and_then(|v| v.as_str()).unwrap_or("desktop").to_string();
@@ -206,7 +206,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
     
     println!("PID: {} Port: {}", std::process::id(), l_port);
     match a_game_name.as_str() {
-        "gladius" => {gladius::execute(&mut game, must_delay, delay).await;}
+        "thor_hitgladius_the_bonus" => {gladius::execute(&mut game, must_delay, delay).await;}
         _ => {eprintln!("\r\tGame not implement");}
     };
     let _ = child.kill();

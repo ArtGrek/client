@@ -90,7 +90,7 @@ pub struct Params {
 
 pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, delay: i64) -> Result<(), Box<dyn Error>> {
     //game config
-    let game_config: Value = serde_json::from_str(&(fs::read_to_string("./".to_owned() + &a_game_name + ".json").unwrap_or_default())).unwrap_or_default();
+    let game_config: Value = serde_json::from_str(&(fs::read_to_string("./configs/".to_owned() + &a_game_name + ".json").unwrap_or_default())).unwrap_or_default();
     let launch_vertion = game_config.get("launch_vertion").and_then(|v| {v.as_i64()}).unwrap_or(1);
     let l_launch_url = game_config.get("launch_url").and_then(|v| v.as_str()).unwrap_or("https://bng.games/play/{QUEUE}/?lang=en").to_string().replace("{QUEUE}", &a_game_name);
     let l_device = game_config.get("device").and_then(|v| v.as_str()).unwrap_or("desktop").to_string();
