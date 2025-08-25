@@ -16,12 +16,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let supported_games: Vec<String> = serde_json::from_str(&(fs::read_to_string("./configs/supported_games.json".to_string()).unwrap_or_default())).unwrap_or_default();
     let supported_providers: Vec<String> = serde_json::from_str(&(fs::read_to_string("./configs/supported_providers.json".to_string()).unwrap_or_default())).unwrap_or_default();
     let mut rl = DefaultEditor::new()?;
+    let history_path = "./configs/history.txt";
+    let _ = rl.load_history(history_path);
     let game_provider = loop {
         match rl.readline("Input game provider (required): ") {
             Ok(line) => {
                 let trimmed = line.trim().to_string();
                 if !trimmed.is_empty() && supported_providers.contains(&trimmed) {
-                    rl.add_history_entry(line).ok();
+                    let _ = rl.add_history_entry(line.as_str());
+                    if rl.append_history(history_path).is_err() {let _ = rl.save_history(history_path);}
                     break trimmed;
                 }
             }
@@ -35,7 +38,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(line) => {
                 let trimmed = line.trim().to_string();
                 if !trimmed.is_empty() && supported_games.contains(&trimmed) {
-                    rl.add_history_entry(line).ok();
+                    let _ = rl.add_history_entry(line.as_str());
+                    if rl.append_history(history_path).is_err() {let _ = rl.save_history(history_path);}
                     break trimmed;
                 }
             }
