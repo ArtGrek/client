@@ -6,6 +6,7 @@ use tokio::time::{sleep, Duration};
 use rand::Rng;
 mod bng;
 mod enj;
+mod hacksaw;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -32,6 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let _ = match game_provider.as_str() {
             "bng" => {bng::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
             "enj" => {enj::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
+            "hacksaw" => {hacksaw::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
             _ => {eprintln!("\r\tProvider not implement"); Ok(())}
         };
         let delay: u64 = rand::thread_rng().gen_range(10..=30);
