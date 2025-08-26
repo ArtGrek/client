@@ -13,8 +13,6 @@ mod network;
 mod gladius;
 use url::Url;
 use chrono::Utc;
-use std::time::Duration;
-use tokio::time::sleep;
 use rand;
 use std::net::TcpListener;
 
@@ -59,14 +57,16 @@ pub struct GameParams {
     pub line: i64,
     //pub bet_factors: Vec<i64>,
     pub bet_factor: i64,
-    pub selected_modes: Vec<i64>,
-    pub selected_mode: i64,
+    pub selected_modes: Vec<String>,
+    pub selected_mode: String,
     pub can_buy_bonus: bool,
     pub buy_bonus_only: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct GameData {
+    pub seq: i64,
+    pub round_id: String,
     pub command: String,
     pub game: String,
     pub platform: String,
@@ -120,8 +120,8 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
     let l_line = game_config.get("line").and_then(|v| {if l_lines.contains(&v.as_i64().unwrap_or_default()) {v.as_i64()} else {l_lines.get(0).cloned()}}).unwrap_or(1);
     let l_bet_factors: Vec<i64> = game_config.get("bet_factors").and_then(|v| v.as_array()).unwrap_or(&vec![]).iter().filter_map(|v| v.as_i64()).collect();
     let l_bet_factor = game_config.get("bet_factor").and_then(|v| {if l_bet_factors.contains(&v.as_i64().unwrap_or_default()) {v.as_i64()} else {l_bet_factors.get(0).cloned()}}).unwrap_or(20);
-    let l_selected_modes: Vec<i64> = game_config.get("selected_modes").and_then(|v| v.as_array()).unwrap_or(&vec![]).iter().filter_map(|v| v.as_i64()).collect();
-    let l_selected_mode = game_config.get("selected_mode").and_then(|v| {if l_selected_modes.contains(&v.as_i64().unwrap_or_default()) {v.as_i64()} else {l_selected_modes.get(0).cloned()}}).unwrap_or(1);
+    let l_selected_modes: Vec<String> = game_config.get("selected_modes").and_then(|v| v.as_array()).unwrap_or(&vec![]).iter().filter_map(|v| Some(v.as_str()?.to_string())).collect();
+    let l_selected_mode: String = game_config.get("selected_mode").and_then(|v| v.as_str()).map(|s| s.to_string()).filter(|s| l_selected_modes.contains(s)).unwrap_or_else(|| l_selected_modes.get(0).cloned().unwrap_or_else(|| "mod_bonus".to_string()));
     let l_can_buy_bonus = game_config.get("can_buy_bonus").and_then(|v| v.as_bool()).unwrap_or(false);
     let l_buy_bonus_only = game_config.get("buy_bonus_only").and_then(|v| v.as_bool()).unwrap_or(false);
     
@@ -150,6 +150,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
         .arg(&l_port.to_string())
         .spawn()?;
 
+    /*
     let prefix = a_location.to_owned() + &a_game_name.clone() + "/cloudflare/" + &ts + "/";
     if let Err(e) = wait_for_file(&(prefix.clone() + "token.txt"), 30).await {eprintln!("wait for token error: {e}");}
     let l_token = match fs::read_to_string(&(prefix.clone() + "token.txt")) {Ok(t) => t, Err(e) => {eprintln!("read token error: {e}");String::new()}};
@@ -159,7 +160,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
     let l_wl = match fs::read_to_string(&(prefix.clone() + "wl.txt")) {Ok(t) => t, Err(e) => {eprintln!("read wl error: {e}");String::new()}};
     if let Err(e) = wait_for_file(&(prefix.clone() + "url.txt"), 30).await {eprintln!("wait for url error: {e}");}
     let l_url = match fs::read_to_string(&(prefix.clone() + "url.txt")) {Ok(t) => t, Err(e) => {eprintln!("read url error: {e}");String::new()}};
-
+    */
 
     let mut game: Game = Game {
         //name: a_game_name.clone(), 
@@ -173,16 +174,18 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
             buy_bonus_only: l_buy_bonus_only.clone(),
         }, 
         data: GameData { 
+            seq: 2,
+            round_id: Default::default(), 
             command: "login".to_string(), 
             game: Default::default(), 
             platform: Default::default(), 
             re_enter: false, 
             prev_request_id: Default::default(), 
             request_id: Uuid::new_v4().to_string(), 
-            wl: l_wl.clone(),
+            wl: Default::default(), 
             session_id: Default::default(), 
-            token: l_token.clone(),
-            language: l_language.clone(),
+            token: Default::default(), 
+            language: Default::default(), 
             mode: "play".to_string(), 
             huid: Default::default(),
             action: Default::default(), 
@@ -197,7 +200,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
         transactions_file: l_transactions_file.clone(),
         ws_client: Url::parse(&format!("ws://localhost:{}", l_port)).expect(&format!("set ws://localhost:{} failed", l_port)),
         request: Request {
-            url: l_url.clone(),
+            url: "https://rgs-demo.hacksawgaming.com/api/play/bet".to_string(),
             params: HashMap::new() ,
             body: Default::default(),
         },
@@ -212,18 +215,4 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
     let _ = child.kill();
 
     Ok(())
-}
-
-pub async fn wait_for_file(path: &str, max_wait_secs: u64) -> Result<(), Box<dyn Error>> {
-    let file_path = Path::new(path);
-    let start = std::time::Instant::now();
-    loop {
-        if file_path.exists() {
-            return Ok(());
-        }
-        if start.elapsed().as_secs() >= max_wait_secs {
-            return Err(format!("Файл '{}' не появился за {} секунд", path, max_wait_secs).into());
-        }
-        sleep(Duration::from_millis(200)).await;
-    }
 }
