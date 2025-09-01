@@ -12,5 +12,5 @@
 	"selected_modes":["mod_bonus","mod_shield","fs"],
 	"selected_mode": "mod_bonus",
 	"can_buy_bonus":true,
-	"buy_bonus_only": true
+	"buy_bonus_only": false
 }

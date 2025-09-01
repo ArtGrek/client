@@ -1,5 +1,5 @@
 //china_festival, coin_lamp, 3_aztec_temples
-use serde_json::{json, Value};
+use serde_json::json;
 use serde::{Deserialize, Serialize};
 use std::{io::{self, Write}, /*process::exit*/};
 use rand;
@@ -125,16 +125,6 @@ impl From<GameData> for Collect {
     }
 }
 
-struct Restart {
-    pub _buy_spin: bool,
-    pub win: bool,
-    pub _bonus_init: bool,
-    pub _bonus_init_befor: bool,
-    pub _respin: bool,
-    pub _bonus_spins_stop: bool,
-    pub _bonus_spins_stop_befor: bool,
-}
-
 pub async fn execute(a_game: &mut Game, must_delay: bool, delay: i64) {
     println!(" - {}", &a_game.transactions_file);
         send_exec("get_last_state", a_game).await;
@@ -146,11 +136,10 @@ pub async fn execute(a_game: &mut Game, must_delay: bool, delay: i64) {
         let mut l_request_count = 0;
         println!("\tBalance: {:.2}", (l_balance as f64) / 100.0);
         println!("\tRequests count: {}", l_request_count);
-        let mut l_restart: Restart = Restart {_buy_spin: (true), win: (true), _bonus_init: (true), _bonus_init_befor: (true), _respin: (true), _bonus_spins_stop: (true), _bonus_spins_stop_befor: (true)};
         let mut l_game: Game;
         loop {
             l_game = a_game.clone();
-            next_body_exec(a_game, &mut l_restart);
+            next_body_exec(a_game);
             send_exec("api", a_game).await;
             let _ = log_request_response(&a_game.transactions_file, &json!({"in": a_game.request.body,"out": a_game.response}));
             if a_game.response.get("statusCode").and_then(|code| code.as_i64()) != Some(0)
@@ -175,11 +164,6 @@ fn set_start(a_game: &mut Game) {
     a_game.request.body = serde_json::to_value(&Start::from(a_game.data.clone())).unwrap_or_default();
 }
 
-fn set_sync(a_game: &mut Game) {
-    a_game.data.seq += 1;
-    a_game.request.body = serde_json::to_value(&Sync::from(a_game.data.clone())).unwrap_or_default();
-}
-
 fn set_spin(a_game: &mut Game) {
     a_game.data.seq += 1;
     a_game.data.action.params.bet_per_line = Some(a_game.params.bet_per_line);
@@ -187,12 +171,6 @@ fn set_spin(a_game: &mut Game) {
     a_game.data.action.params.bet_factor = None;
     a_game.data.action.params.selected_mode = None;
     a_game.request.body = serde_json::to_value(&Play::from(a_game.data.clone())).unwrap_or_default();
-}
-
-fn set_collect(a_game: &mut Game) {
-    a_game.data.seq += 1;
-    a_game.data.round_id = a_game.response.get("round").and_then(|round| {round.get("roundId")}).and_then(|round_id| {round_id.as_str()}).map(|s| s.to_string()).unwrap_or_default();
-    a_game.request.body = serde_json::to_value(&Collect::from(a_game.data.clone())).unwrap_or_default();
 }
 
 fn set_buy_spin(a_game: &mut Game) {
@@ -204,19 +182,21 @@ fn set_buy_spin(a_game: &mut Game) {
     a_game.request.body = serde_json::to_value(&Play::from(a_game.data.clone())).unwrap_or_default();
 }
 
-fn next_body_exec(a_game: &mut Game, a_restart: &mut Restart) {
+fn set_collect(a_game: &mut Game) {
+    a_game.data.seq += 1;
+    a_game.data.round_id = a_game.response.get("round").and_then(|round| {round.get("roundId")}).and_then(|round_id| {round_id.as_str()}).map(|s| s.to_string()).unwrap_or_default();
+    a_game.request.body = serde_json::to_value(&Collect::from(a_game.data.clone())).unwrap_or_default();
+}
+
+fn next_body_exec(a_game: &mut Game) {
     if rand::random_range(0..1_000) == 0 {
         set_start(a_game);
-    } else if let Some(context) = a_game.response.get("context") {
-        if let Some(actions) = context.get("actions") {
-            if actions.as_array().unwrap_or(&Vec::new()).contains(&Value::String("spin".to_string())) {
-                if a_game.params.can_buy_bonus && a_game.params.buy_bonus_only {
-                    set_buy_spin(a_game);
-                } else if rand::random_range(0..100) == 0 {
-                    set_sync(a_game);
-                } else {set_spin(a_game);}
-            }
-        }
+    } else {
+        if let Some(round) = a_game.response.get("round") {
+            if round.get("status").and_then(|status| {status.as_str()}) == Some("wfwpc") {
+                set_collect(a_game);
+            } else if a_game.params.can_buy_bonus && a_game.params.buy_bonus_only {set_buy_spin(a_game);} else {set_spin(a_game);}
+        } else {if a_game.params.can_buy_bonus && a_game.params.buy_bonus_only {set_buy_spin(a_game);} else {set_spin(a_game);}}
     }
 }
 

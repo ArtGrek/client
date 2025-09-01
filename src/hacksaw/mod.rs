@@ -174,7 +174,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
             buy_bonus_only: l_buy_bonus_only.clone(),
         }, 
         data: GameData { 
-            seq: 2,
+            seq: 1,
             round_id: Default::default(), 
             command: "login".to_string(), 
             game: Default::default(), 
