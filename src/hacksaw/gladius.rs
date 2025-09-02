@@ -193,7 +193,8 @@ fn next_body_exec(a_game: &mut Game) {
         set_start(a_game);
     } else {
         if let Some(round) = a_game.response.get("round") {
-            if round.get("status").and_then(|status| {status.as_str()}) == Some("wfwpc") {
+            if round.get("status").and_then(|status| {status.as_str()}) == Some("wfwpc") 
+            && round.get("events").and_then(|events| {events.as_array()}).map(|arr| arr.len()) > Some(1) {
                 set_collect(a_game);
             } else if a_game.params.can_buy_bonus && a_game.params.buy_bonus_only {set_buy_spin(a_game);} else {set_spin(a_game);}
         } else {if a_game.params.can_buy_bonus && a_game.params.buy_bonus_only {set_buy_spin(a_game);} else {set_spin(a_game);}}
