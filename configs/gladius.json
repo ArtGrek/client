@@ -10,7 +10,7 @@
 	"bet_factors":[10],
 	"bet_factor":10,
 	"selected_modes":["mod_bonus","mod_shield","fs"],
-	"selected_mode": "mod_shield",
+	"selected_mode": "fs",
 	"can_buy_bonus":true,
-	"buy_bonus_only": true
+	"buy_bonus_only": false
 }

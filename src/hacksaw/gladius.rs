@@ -132,6 +132,7 @@ pub async fn execute(a_game: &mut Game, must_delay: bool, delay: i64) {
         let l_huid = a_game.response.get("playerId").and_then(|huid| huid.as_str()).unwrap_or_default().to_string();
         a_game.data.session_id = l_session_id.clone();
         a_game.data.huid = l_huid.clone();
+        a_game.data.autogame = true;
         let mut l_balance: i64 = a_game.response.get("accountBalance").and_then(|user| user.get("balance")).and_then(|balance| balance.as_str()?.parse::<i64>().ok()).unwrap_or(0);
         let mut l_request_count = 0;
         println!("\tBalance: {:.2}", (l_balance as f64) / 100.0);
