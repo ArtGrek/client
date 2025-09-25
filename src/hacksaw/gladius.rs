@@ -160,7 +160,7 @@ pub async fn execute(a_game: &mut Game, must_delay: bool, delay: i64) {
         }
 }
 
-fn set_start(a_game: &mut Game) {
+fn _set_start(a_game: &mut Game) {
     a_game.data.seq += 1;
     a_game.request.body = serde_json::to_value(&Start::from(a_game.data.clone())).unwrap_or_default();
 }
@@ -190,15 +190,12 @@ fn set_collect(a_game: &mut Game) {
 }
 
 fn next_body_exec(a_game: &mut Game) {
-    if rand::random_range(0..1_000) == 0 {
-        set_start(a_game);
-    } else {
         if let Some(round) = a_game.response.get("round") {
             if round.get("status").and_then(|status| {status.as_str()}) == Some("wfwpc") 
             && round.get("events").and_then(|events| {events.as_array()}).map(|arr| arr.len()) > Some(1) {
                 set_collect(a_game);
             } else if a_game.params.can_buy_bonus && a_game.params.buy_bonus_only {set_buy_spin(a_game);} else {set_spin(a_game);}
         } else {if a_game.params.can_buy_bonus && a_game.params.buy_bonus_only {set_buy_spin(a_game);} else {set_spin(a_game);}}
-    }
+    
 }
 
