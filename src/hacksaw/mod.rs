@@ -209,7 +209,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
     
     println!("PID: {} Port: {}", std::process::id(), l_port);
     match a_game_name.as_str() {
-        "gladius" => {gladius::execute(&mut game, must_delay, delay).await;}
+        "gladius_death_or_glory" => {gladius::execute(&mut game, must_delay, delay).await;}
         _ => {eprintln!("\r\tGame not implement");}
     };
     let _ = child.kill();
