@@ -132,7 +132,6 @@ pub async fn execute(a_game: &mut Game, must_delay: bool, delay: i64) {
         let l_huid = a_game.response.get("playerId").and_then(|huid| huid.as_str()).unwrap_or_default().to_string();
         a_game.data.session_id = l_session_id.clone();
         a_game.data.huid = l_huid.clone();
-        a_game.data.autogame = true;
         let mut l_balance: i64 = a_game.response.get("accountBalance").and_then(|user| user.get("balance")).and_then(|balance| balance.as_str()?.parse::<i64>().ok()).unwrap_or(0);
         let mut l_request_count = 0;
         println!("\tBalance: {:.2}", (l_balance as f64) / 100.0);
@@ -140,7 +139,7 @@ pub async fn execute(a_game: &mut Game, must_delay: bool, delay: i64) {
         let mut l_game: Game;
         loop {
             l_game = a_game.clone();
-            next_body_exec(a_game);
+            next_body_exec(a_game).await;
             send_exec("api", a_game).await;
             let _ = log_request_response(&a_game.transactions_file, &json!({"in": a_game.request.body,"out": a_game.response}));
             if a_game.response.get("statusCode").and_then(|code| code.as_i64()) != Some(0)
@@ -189,10 +188,11 @@ fn set_collect(a_game: &mut Game) {
     a_game.request.body = serde_json::to_value(&Collect::from(a_game.data.clone())).unwrap_or_default();
 }
 
-fn next_body_exec(a_game: &mut Game) {
+async fn next_body_exec(a_game: &mut Game) {
         if let Some(round) = a_game.response.get("round") {
-            if round.get("status").and_then(|status| {status.as_str()}) == Some("wfwpc") 
-            && round.get("events").and_then(|events| {events.as_array()}).map(|arr| arr.len()) > Some(1) {
+            let events_count = round.get("events").and_then(|events| {events.as_array()}).map(|arr| arr.len()).unwrap_or_default();
+            if events_count > 1 {
+                sleep(Duration::from_millis(2000 * (events_count-1) as u64)).await;
                 set_collect(a_game);
             } else if a_game.params.can_buy_bonus && a_game.params.buy_bonus_only {set_buy_spin(a_game);} else {set_spin(a_game);}
         } else {if a_game.params.can_buy_bonus && a_game.params.buy_bonus_only {set_buy_spin(a_game);} else {set_spin(a_game);}}
