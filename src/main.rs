@@ -9,6 +9,7 @@ use rustyline::DefaultEditor;
 mod bng;
 mod enj;
 mod hacksaw;
+mod octo;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -58,6 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "bng" => {bng::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
             "enj" => {enj::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
             "hacksaw" => {hacksaw::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
+            "octo" => {octo::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
             _ => {eprintln!("\r\tProvider not implement"); Ok(())}
         };
         let delay: u64 = rand::random_range(10..=30);

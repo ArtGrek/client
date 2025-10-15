@@ -9,16 +9,16 @@ use uuid::Uuid;
 use super::{Game, GameData, Action, network::send_exec, storage::log_request_response};
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct LoginV1 {
+pub struct _LoginV1 {
     pub command: String,
     pub request_id: String,
     pub token: String,
     pub language: String
 }
 
-impl From<GameData> for LoginV1 {
+impl From<GameData> for _LoginV1 {
     fn from(obj: GameData) -> Self {
-        LoginV1 {
+        _LoginV1 {
             command: obj.command.clone(),
             request_id: obj.request_id.clone(),
             token: obj.token.clone(),
@@ -28,7 +28,7 @@ impl From<GameData> for LoginV1 {
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct LoginV2 {
+pub struct _LoginV2 {
     pub command: String,
     pub game: String,
     pub platform: String,
@@ -39,9 +39,9 @@ pub struct LoginV2 {
     pub wl: String,
 }
 
-impl From<GameData> for LoginV2 {
+impl From<GameData> for _LoginV2 {
     fn from(obj: GameData) -> Self {
-        LoginV2 {
+        _LoginV2 {
             command: obj.command.clone(),
             game: obj.game.clone(),
             platform: obj.platform.clone(),

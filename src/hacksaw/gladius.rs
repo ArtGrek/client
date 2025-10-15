@@ -8,7 +8,7 @@ use tokio::time::{sleep, Duration};
 use super::{Game, GameData, network::send_exec, storage::log_request_response};
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct Start {
+pub struct _Start {
     pub seq: i64,
     pub partner: String,
     #[serde(rename = "gameId")]
@@ -26,9 +26,9 @@ pub struct Start {
     pub token: String,
 }
 
-impl From<GameData> for Start {
+impl From<GameData> for _Start {
     fn from(obj: GameData) -> Self {
-        Start {
+        _Start {
             seq: obj.seq,
             partner: "demo".to_string(),
             game_id: 1807,
@@ -45,14 +45,14 @@ impl From<GameData> for Start {
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct Sync {
+pub struct _Sync {
     #[serde(rename = "sessionUuid")]
     pub session_uuid: String,
 }
 
-impl From<GameData> for Sync {
+impl From<GameData> for _Sync {
     fn from(_obj: GameData) -> Self {
-        Sync {
+        _Sync {
             session_uuid: "00000000-0000-0000-0000-000000000000".to_string(),
         }
     }
@@ -161,7 +161,7 @@ pub async fn execute(a_game: &mut Game, must_delay: bool, delay: i64) {
 
 fn _set_start(a_game: &mut Game) {
     a_game.data.seq += 1;
-    a_game.request.body = serde_json::to_value(&Start::from(a_game.data.clone())).unwrap_or_default();
+    a_game.request.body = serde_json::to_value(&_Start::from(a_game.data.clone())).unwrap_or_default();
 }
 
 fn set_spin(a_game: &mut Game) {

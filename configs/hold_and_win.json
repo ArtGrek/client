@@ -1,0 +1,15 @@
+{
+	"launch_vertion":1,
+	"launch_url":"https://lobby-api.octoplay.com/platform/public/launch/super-grand-link-express-hold-and-win",
+	"device":"desktop",
+	"bets":[1, 2, 3, 4, 5, 8, 10, 15, 20, 30, 40, 50, 75, 100, 200, 300, 500, 750, 1000],
+	"bet_per_line":200,
+	"lines":[1],
+	"line":1,
+	"bet_factors":[10],
+	"bet_factor":10,
+	"selected_modes":["293","294","295"],
+	"selected_mode": "293",
+	"can_buy_bonus":true,
+	"buy_bonus_only": false
+}
