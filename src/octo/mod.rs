@@ -138,9 +138,15 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
 
     // chrome
     let chrome_path = r#"C:\Program Files\Google\Chrome\Application\chrome.exe"#;
-    let chrome_args = [
+    /*let chrome_args = [
         "--remote-debugging-port=9222",
         "--user-data-dir=C:\\ChromeDebug",
+    ];*/
+    let ts = Utc::now().timestamp_millis();
+    let user_data_dir = format!("C:\\ChromeDebug_{}", ts);
+    let chrome_args = [
+        "--remote-debugging-port=9222",
+        &format!("--user-data-dir={}", user_data_dir),
     ];
     let chrome_child = Command::new(chrome_path)
         .args(&chrome_args)
@@ -181,6 +187,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
     let chrome_ref = chrome_process.clone();
     let node_ref = node_process.clone();
     let ws_port = l_port;
+    let user_data_dir_ref = user_data_dir.clone();
     // ===== хук Ctrl+C =====
     tokio::spawn(async move {
         if signal::ctrl_c().await.is_ok() {
@@ -205,6 +212,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
                 let _ = chrome_child.kill();
                 let _ = chrome_child.wait();
             }
+            let _ = std::fs::remove_dir_all(&user_data_dir_ref);
             std::process::exit(0);
         }
     });
@@ -275,6 +283,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
         let _ = chrome_child.kill();
         let _ = chrome_child.wait();
     }
+    let _ = std::fs::remove_dir_all(&user_data_dir);
 
     Ok(())
 }

@@ -37,7 +37,7 @@ pub async fn send_exec(cmd_type: &str, a_game: &mut Game) -> Result<(), Box<dyn 
                 if let Err(err) = send_res {
                     //print!("\x1B[1A\x1B[2K");
                     //print!("\x1B[1A\x1B[2K");
-                    eprintln!("\r\tConnection error: {}. attempts {}/{}", err, attempts + 1, max_retries);
+                    eprintln!("\r\t[WARN] Send failed: {}. Attempt {}/{}", err, attempts + 1, max_retries);
                     //print!("\x1B[K\t\n");
                     //print!("\x1B[K\t\n");
                     attempts += 1;
@@ -56,14 +56,14 @@ pub async fn send_exec(cmd_type: &str, a_game: &mut Game) -> Result<(), Box<dyn 
                         Ok(_) => {
                             //print!("\x1B[1A\x1B[2K");
                             //print!("\x1B[1A\x1B[2K");
-                            eprintln!("\r\tServer error: неверный тип сообщения. attempts {}/{}", attempts + 1, max_retries);
+                            eprintln!("\r\t[WARN] Unexpected message type. Attempt {}/{}", attempts + 1, max_retries);
                             //print!("\x1B[K\t\n");
                             //print!("\x1B[K\t\n");
                         }
                         Err(err) => {
                             //print!("\x1B[1A\x1B[2K");
                             //print!("\x1B[1A\x1B[2K");
-                            eprintln!("\r\tConnection error: {}. attempts {}/{}", err, attempts + 1, max_retries);
+                            eprintln!("\r\t[WARN] Receive failed: {}. Attempt {}/{}", err, attempts + 1, max_retries);
                             //print!("\x1B[K\t\n");
                             //print!("\x1B[K\t\n");
                         }
@@ -71,7 +71,7 @@ pub async fn send_exec(cmd_type: &str, a_game: &mut Game) -> Result<(), Box<dyn 
                 } else {
                     //print!("\x1B[1A\x1B[2K");
                     //print!("\x1B[1A\x1B[2K");
-                    eprintln!("\r\tServer error: нет ответа от сервера. attempts {}/{}", attempts + 1, max_retries);
+                    eprintln!("\r\t[WARN] No response from server. Attempt {}/{}", attempts + 1, max_retries);
                     //print!("\x1B[K\t\n");
                     //print!("\x1B[K\t\n");
                 }
@@ -79,7 +79,7 @@ pub async fn send_exec(cmd_type: &str, a_game: &mut Game) -> Result<(), Box<dyn 
             Err(err) => {
                 //print!("\x1B[1A\x1B[2K");
                 //print!("\x1B[1A\x1B[2K");
-                eprintln!("\r\tConnection error: {}. attempts {}/{}", err, attempts + 1, max_retries);
+                eprintln!("\r\t[WARN] Connection failed: {}. Attempt {}/{}", err, attempts + 1, max_retries);
                 //print!("\x1B[K\t\n");
                 //print!("\x1B[K\t\n");
             }
@@ -89,7 +89,7 @@ pub async fn send_exec(cmd_type: &str, a_game: &mut Game) -> Result<(), Box<dyn 
     }
     //print!("\x1B[1A\x1B[2K");
     //print!("\x1B[1A\x1B[2K");
-    eprintln!("\r\tMaximum number of attempts exceeded!");
+    eprintln!("\r\t[ERROR] Maximum number of attempts ({}) exceeded!", max_retries);
     Err("Maximum number of attempts exceeded!".into())
 }
 
