@@ -14,6 +14,10 @@ use url::Url;
 use chrono::Utc;
 use rand;
 use std::net::TcpListener;
+use tokio::signal;
+use std::sync::{Arc, Mutex};
+use tokio_tungstenite::tungstenite::protocol::Message;
+use futures_util::SinkExt;
 
 #[derive(Debug, Clone)]
 pub struct Game {
@@ -128,6 +132,25 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
     else {a_location.to_owned() + &a_game_name.clone() + "/transactions/bet_" + &l_bet_per_line.to_string() + "_line_" + &l_line.to_string() + "_" + &Uuid::new_v4().to_string().replace("-", "") + ".json"};
     if let Some(parent) = Path::new(&l_transactions_file).parent() {let _ = fs::create_dir_all(parent);}
 
+    // ===== общие переменные для доступа из хука =====
+    let chrome_process: Arc<Mutex<Option<std::process::Child>>> = Arc::new(Mutex::new(None));
+    let node_process: Arc<Mutex<Option<std::process::Child>>> = Arc::new(Mutex::new(None));
+
+    // chrome
+    let chrome_path = r#"C:\Program Files\Google\Chrome\Application\chrome.exe"#;
+    let chrome_args = [
+        "--remote-debugging-port=9222",
+        "--user-data-dir=C:\\ChromeDebug",
+    ];
+    let chrome_child = Command::new(chrome_path)
+        .args(&chrome_args)
+        .spawn()?;
+
+    println!("Run Chrome with PID {:?}", chrome_child.id());
+    *chrome_process.lock().unwrap() = Some(chrome_child);
+    tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+
+    // script
     let mut l_port = 0;
     for _ in 0..10 {
         let try_port = 3001 + rand::random_range(0..1000);
@@ -137,29 +160,55 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
         }
     }
     if l_port == 0 {return Err("\r\tCannot find port".into());}
-
     let ts = Utc::now().timestamp_millis().to_string();
     let temp_data_dir = a_location.to_owned() + &a_game_name.clone() + "/cloudflare/" + &ts.clone() + "/";
     fs::create_dir_all(&temp_data_dir)?;
-    let mut child = Command::new("node")
-        .arg(&(a_location.to_owned() + &a_game_name.clone() + "/cloudflare/playwright_ws.js"))
+    let child = Command::new("cmd")
+        .arg("/C")
+        .arg("start")
+        .arg("node")
+        .arg(&(a_location.to_owned() + &a_game_name.clone() + "/client/playwright_ws.js"))
         .arg(&l_launch_url)
         .arg(&temp_data_dir)
         .arg(&l_transactions_file)
         .arg(&l_port.to_string())
         .spawn()?;
+    println!("Run script with PID {:?}", child.id());
+    *node_process.lock().unwrap() = Some(child);
+    tokio::time::sleep(std::time::Duration::from_secs(15)).await;
 
-    /*
-    let prefix = a_location.to_owned() + &a_game_name.clone() + "/cloudflare/" + &ts + "/";
-    if let Err(e) = wait_for_file(&(prefix.clone() + "token.txt"), 30).await {eprintln!("wait for token error: {e}");}
-    let l_token = match fs::read_to_string(&(prefix.clone() + "token.txt")) {Ok(t) => t, Err(e) => {eprintln!("read token error: {e}");String::new()}};
-    if let Err(e) = wait_for_file(&(prefix.clone() + "language.txt"), 30).await {eprintln!("wait for language error: {e}");}
-    let l_language = match fs::read_to_string(&(prefix.clone() + "language.txt")) {Ok(t) => t, Err(e) => {eprintln!("read language error: {e}");String::new()}};
-    if let Err(e) = wait_for_file(&(prefix.clone() + "wl.txt"), 30).await {eprintln!("wait for wl error: {e}");}
-    let l_wl = match fs::read_to_string(&(prefix.clone() + "wl.txt")) {Ok(t) => t, Err(e) => {eprintln!("read wl error: {e}");String::new()}};
-    if let Err(e) = wait_for_file(&(prefix.clone() + "url.txt"), 30).await {eprintln!("wait for url error: {e}");}
-    let l_url = match fs::read_to_string(&(prefix.clone() + "url.txt")) {Ok(t) => t, Err(e) => {eprintln!("read url error: {e}");String::new()}};
-    */
+    // ===== общие переменные для доступа из хука =====
+    let chrome_ref = chrome_process.clone();
+    let node_ref = node_process.clone();
+    let ws_port = l_port;
+    // ===== хук Ctrl+C =====
+    tokio::spawn(async move {
+        if signal::ctrl_c().await.is_ok() {
+            eprintln!("[SIGNAL] Ctrl+C detected — shutting down...");
+            let ws_url = format!("ws://localhost:{ws_port}");
+            if let Ok((mut ws_stream, _)) = tokio_tungstenite::connect_async(&ws_url).await {
+                let _ = ws_stream.send(Message::Text(r#"{"type":"shutdown"}"#.into())).await;
+                eprintln!("→ Sent shutdown command to Node script");
+                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            } else {
+                eprintln!("→ Failed to connect to Node WS (already closed?)");
+            }
+            if let Some(mut node_child) = node_ref.lock().unwrap().take() {
+                let pid = node_child.id();
+                eprintln!("→ Killing Node (PID: {pid})");
+                let _ = node_child.kill();
+                let _ = node_child.wait();
+            }
+            if let Some(mut chrome_child) = chrome_ref.lock().unwrap().take() {
+                let pid = chrome_child.id();
+                eprintln!("→ Killing Chrome (PID: {pid})");
+                let _ = chrome_child.kill();
+                let _ = chrome_child.wait();
+            }
+            std::process::exit(0);
+        }
+    });
+
 
     let mut game: Game = Game {
         //name: a_game_name.clone(), 
@@ -205,13 +254,27 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
         },
         response: Default::default(),
     };
+
     
     println!("PID: {} Port: {}", std::process::id(), l_port);
     match a_game_name.as_str() {
-        "hold_and_win" => {hold_and_win::execute(&mut game, must_delay, delay).await;}
+        "hold_and_win" => {let _ = hold_and_win::execute(&mut game, must_delay, delay).await;}
         _ => {eprintln!("\r\tGame not implement");}
     };
-    let _ = child.kill();
+    
+    let _ = super::octo::network::send_exec("shutdown", &mut game).await;
+    if let Some(mut child) = node_process.lock().unwrap().take() {
+        let pid = child.id();
+        println!("Stopping script with PID {pid}...");
+        let _ = child.kill();
+        let _ = child.wait();
+    }
+    if let Some(mut chrome_child) = chrome_process.lock().unwrap().take() {
+        let pid = chrome_child.id();
+        println!("Stopping Chrome with PID {pid}...");
+        let _ = chrome_child.kill();
+        let _ = chrome_child.wait();
+    }
 
     Ok(())
 }

@@ -5,11 +5,11 @@ use super::Game;
 use futures_util::{SinkExt, StreamExt};
 use tokio_tungstenite::connect_async;
 
-pub async fn send_exec(cmd_type: &str, a_game: &mut Game) {
-    // Вставляем тип команды
+pub async fn send_exec(cmd_type: &str, a_game: &mut Game) -> Result<(), Box<dyn std::error::Error>>  {
     let mut fields: Map<String, Value> = Default::default();
     fields.insert("type".to_string(), Value::String(cmd_type.to_string()));
     match cmd_type {
+        "shutdown" => {}
         "get_last_state" => {}
         "api" => {
             let mut url = a_game.request.url.clone();
@@ -35,11 +35,11 @@ pub async fn send_exec(cmd_type: &str, a_game: &mut Game) {
             Ok((mut ws_stream, _)) => {
                 let send_res = ws_stream.send(tokio_tungstenite::tungstenite::Message::Text(msg.to_string().into())).await;
                 if let Err(err) = send_res {
-                    print!("\x1B[1A\x1B[2K");
-                    print!("\x1B[1A\x1B[2K");
+                    //print!("\x1B[1A\x1B[2K");
+                    //print!("\x1B[1A\x1B[2K");
                     eprintln!("\r\tConnection error: {}. attempts {}/{}", err, attempts + 1, max_retries);
-                    print!("\x1B[K\t\n");
-                    print!("\x1B[K\t\n");
+                    //print!("\x1B[K\t\n");
+                    //print!("\x1B[K\t\n");
                     attempts += 1;
                     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
                     continue;
@@ -51,43 +51,49 @@ pub async fn send_exec(cmd_type: &str, a_game: &mut Game) {
                             //a_game.data.prev_request_id = a_game.data.request_id.clone();
                             a_game.data.prev_client_command_time = Some(start_time.elapsed().as_millis() as i64);
                             a_game.response = serde_json::from_str(&txt).unwrap_or_else(|_| Value::Null);
-                            return ;
+                            return Ok(());
                         }
                         Ok(_) => {
-                            print!("\x1B[1A\x1B[2K");
-                            print!("\x1B[1A\x1B[2K");
+                            //print!("\x1B[1A\x1B[2K");
+                            //print!("\x1B[1A\x1B[2K");
                             eprintln!("\r\tServer error: неверный тип сообщения. attempts {}/{}", attempts + 1, max_retries);
-                            print!("\x1B[K\t\n");
-                            print!("\x1B[K\t\n");
+                            //print!("\x1B[K\t\n");
+                            //print!("\x1B[K\t\n");
                         }
                         Err(err) => {
-                            print!("\x1B[1A\x1B[2K");
-                            print!("\x1B[1A\x1B[2K");
+                            //print!("\x1B[1A\x1B[2K");
+                            //print!("\x1B[1A\x1B[2K");
                             eprintln!("\r\tConnection error: {}. attempts {}/{}", err, attempts + 1, max_retries);
-                            print!("\x1B[K\t\n");
-                            print!("\x1B[K\t\n");
+                            //print!("\x1B[K\t\n");
+                            //print!("\x1B[K\t\n");
                         }
                     }
                 } else {
-                    print!("\x1B[1A\x1B[2K");
-                    print!("\x1B[1A\x1B[2K");
+                    //print!("\x1B[1A\x1B[2K");
+                    //print!("\x1B[1A\x1B[2K");
                     eprintln!("\r\tServer error: нет ответа от сервера. attempts {}/{}", attempts + 1, max_retries);
-                    print!("\x1B[K\t\n");
-                    print!("\x1B[K\t\n");
+                    //print!("\x1B[K\t\n");
+                    //print!("\x1B[K\t\n");
                 }
             }
             Err(err) => {
-                print!("\x1B[1A\x1B[2K");
-                print!("\x1B[1A\x1B[2K");
+                //print!("\x1B[1A\x1B[2K");
+                //print!("\x1B[1A\x1B[2K");
                 eprintln!("\r\tConnection error: {}. attempts {}/{}", err, attempts + 1, max_retries);
-                print!("\x1B[K\t\n");
-                print!("\x1B[K\t\n");
+                //print!("\x1B[K\t\n");
+                //print!("\x1B[K\t\n");
             }
         }
         attempts += 1;
         tokio::time::sleep(std::time::Duration::from_secs(3)).await;
     }
-    print!("\x1B[1A\x1B[2K");
-    print!("\x1B[1A\x1B[2K");
+    //print!("\x1B[1A\x1B[2K");
+    //print!("\x1B[1A\x1B[2K");
     eprintln!("\r\tMaximum number of attempts exceeded!");
+    Err("Maximum number of attempts exceeded!".into())
 }
+
+
+
+        //Connection error: IO error: Удаленный хост принудительно разорвал существующее подключение. (os error 10054). attempts 1/10
+        //Connection error: IO error: Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение. (os error 10061). attempts 2/10
