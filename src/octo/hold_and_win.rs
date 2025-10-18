@@ -75,7 +75,7 @@ impl From<GameData> for Play {
 
 pub async fn execute(a_game: &mut Game, must_delay: bool, delay: i64) -> Result<(), Box<dyn std::error::Error>> {
     println!(" - {}", &a_game.transactions_file);
-        let _ = send_exec("get_last_state", a_game).await?;
+        send_exec("get_last_state", a_game).await?;
         if a_game.response.is_null() {return Err("Game not initialized!".into());}
         let l_session_id = a_game.response.get("result").and_then(|result| result.get("user")).and_then(|user| user.get("token")).and_then(|token| token.as_str()).unwrap_or_default().to_string();
         let l_huid = a_game.response.get("result").and_then(|result| result.get("user")).and_then(|user| user.get("id")).and_then(|id| id.as_str()).unwrap_or_default().to_string();
@@ -83,23 +83,24 @@ pub async fn execute(a_game: &mut Game, must_delay: bool, delay: i64) -> Result<
         a_game.data.huid = l_huid.clone();
         let mut l_balance: f64 = a_game.response.get("result").and_then(|result| result.get("user")).and_then(|user| user.get("balance")).and_then(|balance| balance.get("cash")).and_then(|cash| cash.as_str().and_then(|s| s.parse::<f64>().ok())).unwrap_or(0.0);
         let mut l_request_count = 0;
-        println!("\tBalance: {:.2}", (l_balance as f64) / 100.0);
+        println!("\tBalance: {:.2}", (l_balance as f64));
         println!("\tRequests count: {}", l_request_count);
         loop {
-            let _ = next_body_exec(a_game).await?;
-            let _ = send_exec("api", a_game).await?;
+            next_body_exec(a_game).await?;
+            send_exec("api", a_game).await?;
             let _ = log_request_response(&a_game.transactions_file, &json!({"in": a_game.request.body,"out": a_game.response}));
+            if a_game.response.is_null() {return Err("No answer".into());}
             if !a_game.response.get("result").and_then(|result| result.get("user")).and_then(|user| user.get("notifications")).and_then(|notifications| notifications.as_array().cloned()).unwrap_or_default().is_empty()
             && (a_game.data.action.params.selected_mode.is_none() || a_game.params.buy_bonus_only) {
                 eprintln!("\r\tRequests stoped couse API error: {:?}", a_game.response.get("result").and_then(|result| result.get("user")).and_then(|user| user.get("notifications")).and_then(|notifications| notifications.as_array().cloned()).unwrap_or_default());
                 break;
             }
-            l_balance = a_game.response.get("result").and_then(|result| result.get("user")).and_then(|user| user.get("balance")).and_then(|balance| balance.get("cash")).and_then(|cash| cash.as_str().and_then(|s| s.parse::<f64>().ok())).unwrap_or(0.0);
+            l_balance = a_game.response.get("result").and_then(|r| r.get("user")).and_then(|u| u.get("balance")).and_then(|b| b.get("afterBet")).and_then(|a| a.get("cash")).and_then(|c| c.as_str()?.parse::<f64>().ok()).unwrap_or(0.0);
             l_request_count += 1;
-            //print!("\x1B[1A\x1B[2K");
-            //print!("\x1B[1A\x1B[2K");
+            print!("\x1B[1A\x1B[2K");
+            print!("\x1B[1A\x1B[2K");
             let _ = io::stdout().flush();
-            print!("\x1B[K\tBalance: {:.2}\n", (l_balance as f64) / 100.0);
+            print!("\x1B[K\tBalance: {:.2}\n", (l_balance as f64));
             print!("\x1B[K\tRequests count: {}\n", l_request_count);
             if must_delay {sleep(Duration::from_millis(rand::random_range(500..=delay as u64))).await;}
         };

@@ -35,11 +35,11 @@ pub async fn send_exec(cmd_type: &str, a_game: &mut Game) -> Result<(), Box<dyn 
             Ok((mut ws_stream, _)) => {
                 let send_res = ws_stream.send(tokio_tungstenite::tungstenite::Message::Text(msg.to_string().into())).await;
                 if let Err(err) = send_res {
-                    //print!("\x1B[1A\x1B[2K");
-                    //print!("\x1B[1A\x1B[2K");
+                    print!("\x1B[1A\x1B[2K");
+                    print!("\x1B[1A\x1B[2K");
                     eprintln!("\r\t[WARN] Send failed: {}. Attempt {}/{}", err, attempts + 1, max_retries);
-                    //print!("\x1B[K\t\n");
-                    //print!("\x1B[K\t\n");
+                    print!("\x1B[K\t\n");
+                    print!("\x1B[K\t\n");
                     attempts += 1;
                     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
                     continue;
@@ -54,41 +54,41 @@ pub async fn send_exec(cmd_type: &str, a_game: &mut Game) -> Result<(), Box<dyn 
                             return Ok(());
                         }
                         Ok(_) => {
-                            //print!("\x1B[1A\x1B[2K");
-                            //print!("\x1B[1A\x1B[2K");
+                            print!("\x1B[1A\x1B[2K");
+                            print!("\x1B[1A\x1B[2K");
                             eprintln!("\r\t[WARN] Unexpected message type. Attempt {}/{}", attempts + 1, max_retries);
-                            //print!("\x1B[K\t\n");
-                            //print!("\x1B[K\t\n");
+                            print!("\x1B[K\t\n");
+                            print!("\x1B[K\t\n");
                         }
                         Err(err) => {
-                            //print!("\x1B[1A\x1B[2K");
-                            //print!("\x1B[1A\x1B[2K");
+                            print!("\x1B[1A\x1B[2K");
+                            print!("\x1B[1A\x1B[2K");
                             eprintln!("\r\t[WARN] Receive failed: {}. Attempt {}/{}", err, attempts + 1, max_retries);
-                            //print!("\x1B[K\t\n");
-                            //print!("\x1B[K\t\n");
+                            print!("\x1B[K\t\n");
+                            print!("\x1B[K\t\n");
                         }
                     }
                 } else {
-                    //print!("\x1B[1A\x1B[2K");
-                    //print!("\x1B[1A\x1B[2K");
+                    print!("\x1B[1A\x1B[2K");
+                    print!("\x1B[1A\x1B[2K");
                     eprintln!("\r\t[WARN] No response from server. Attempt {}/{}", attempts + 1, max_retries);
-                    //print!("\x1B[K\t\n");
-                    //print!("\x1B[K\t\n");
+                    print!("\x1B[K\t\n");
+                    print!("\x1B[K\t\n");
                 }
             }
             Err(err) => {
-                //print!("\x1B[1A\x1B[2K");
-                //print!("\x1B[1A\x1B[2K");
+                print!("\x1B[1A\x1B[2K");
+                print!("\x1B[1A\x1B[2K");
                 eprintln!("\r\t[WARN] Connection failed: {}. Attempt {}/{}", err, attempts + 1, max_retries);
-                //print!("\x1B[K\t\n");
-                //print!("\x1B[K\t\n");
+                print!("\x1B[K\t\n");
+                print!("\x1B[K\t\n");
             }
         }
         attempts += 1;
         tokio::time::sleep(std::time::Duration::from_secs(3)).await;
     }
-    //print!("\x1B[1A\x1B[2K");
-    //print!("\x1B[1A\x1B[2K");
+    print!("\x1B[1A\x1B[2K");
+    print!("\x1B[1A\x1B[2K");
     eprintln!("\r\t[ERROR] Maximum number of attempts ({}) exceeded!", max_retries);
     Err("Maximum number of attempts exceeded!".into())
 }

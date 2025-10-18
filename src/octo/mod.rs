@@ -264,9 +264,10 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
     };
 
     
+    tokio::time::sleep(std::time::Duration::from_secs(15)).await;
     println!("PID: {} Port: {}", std::process::id(), l_port);
     match a_game_name.as_str() {
-        "hold_and_win" => {let _ = hold_and_win::execute(&mut game, must_delay, delay).await;}
+        "hold_and_win" => {if let Err(e) = hold_and_win::execute(&mut game, must_delay, delay).await {eprintln!("\r\t[ERROR] {e}");}}
         _ => {eprintln!("\r\tGame not implement");}
     };
     
