@@ -6,6 +6,7 @@ use tokio::time::{sleep, Duration};
 use rand;
 use rustyline::error::ReadlineError;
 use rustyline::DefaultEditor;
+pub mod storage;
 mod bng;
 mod enj;
 mod hacksaw;
@@ -55,13 +56,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let delay_between_requests = config.get("delay_between_requests").and_then(|v| {if v.as_i64() < Some(1000) && v.as_i64() != Some(0) {Some(1000)} else {v.as_i64()}}).unwrap_or(1000);
         let location = config.get("location").and_then(|v| v.as_str()).unwrap_or("./");
         
-        let _ = match game_provider.as_str() {
+        if let Err(e) = match game_provider.as_str() {
             "bng" => {bng::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
             "enj" => {enj::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
             "hacksaw" => {hacksaw::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
             "octo" => {octo::execute(game_name.clone(), location.to_string(), must_delay_between_requests, delay_between_requests).await}
             _ => {eprintln!("\r\tProvider not implement"); Ok(())}
-        };
+        } {eprintln!("[ERROR] {e}");}
         let delay: u64 = rand::random_range(10..=30);
         print!("\x1B[K\t\n");
         for sec in (0..delay).rev() {

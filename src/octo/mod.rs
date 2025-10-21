@@ -7,7 +7,7 @@ use uuid::Uuid;
 use std::error::Error;
 use std::process::Command;
 use anyhow::Result;
-mod storage;
+use crate::storage;
 mod network;
 mod hold_and_win;
 use url::Url;
@@ -173,7 +173,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
         .arg("/C")
         .arg("start")
         .arg("node")
-        .arg(&(a_location.to_owned() + &a_game_name.clone() + "/client/playwright_ws.js"))
+        .arg("./playwright/octoplay.js")
         .arg(&l_launch_url)
         .arg(&temp_data_dir)
         .arg(&l_transactions_file)
@@ -240,7 +240,7 @@ pub async fn execute(a_game_name: String, a_location: String, must_delay: bool, 
             request_id: Uuid::new_v4().to_string(), 
             wl: Default::default(), 
             session_id: Default::default(), 
-            token: Uuid::new_v4().to_string(), 
+            token: Default::default(), 
             language: Default::default(), 
             mode: "play".to_string(), 
             huid: Default::default(),

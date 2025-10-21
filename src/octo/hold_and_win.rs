@@ -55,7 +55,7 @@ impl From<GameData> for Play {
             game: "super-grand-link-express-hold-and-win".to_string(), 
             language: "en-GB".to_string(), 
             mode: "demo".to_string(), 
-            fingerprint: obj.token.clone(), 
+            fingerprint: obj.session_id.clone(), 
             context: Context::default(), 
             bet: Bet { 
                 slot: "1.00".to_string() 

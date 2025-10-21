@@ -87,13 +87,5 @@ pub async fn send_exec(cmd_type: &str, a_game: &mut Game) -> Result<(), Box<dyn 
         attempts += 1;
         tokio::time::sleep(std::time::Duration::from_secs(3)).await;
     }
-    print!("\x1B[1A\x1B[2K");
-    print!("\x1B[1A\x1B[2K");
-    eprintln!("\r\t[ERROR] Maximum number of attempts ({}) exceeded!", max_retries);
     Err("Maximum number of attempts exceeded!".into())
 }
-
-
-
-        //Connection error: IO error: Удаленный хост принудительно разорвал существующее подключение. (os error 10054). attempts 1/10
-        //Connection error: IO error: Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение. (os error 10061). attempts 2/10
